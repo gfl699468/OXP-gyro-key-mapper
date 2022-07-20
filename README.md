@@ -30,3 +30,8 @@ make
 - Since press the night mode button doesn't send any event, it can not be mapped
 - The events only been sent when you release the fn buttons, no events when you press them, so no long press actions
 - Rumble not support yet.
+
+## Credit
+https://github.com/JibbSmart/GamepadMotionHelpers
+https://github.com/BoschSensortec/BMI160_driver
+
