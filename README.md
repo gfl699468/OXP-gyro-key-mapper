@@ -32,6 +32,6 @@ make
 - Rumble not support yet.
 
 ## Credit
-https://github.com/JibbSmart/GamepadMotionHelpers
-https://github.com/BoschSensortec/BMI160_driver
+- [GamepadMotionHelpers](https://github.com/JibbSmart/GamepadMotionHelpers)
+- [BMI160_driver](https://github.com/BoschSensortec/BMI160_driver)
 
