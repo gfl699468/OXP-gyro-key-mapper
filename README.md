@@ -1,5 +1,7 @@
 # Gyro & fn key mapper for onexplayer AMD Mini 5800U
-This tool has been tested with holoiso, it mapping onexplayer AMD Mini 5800U's IMU(BMI260) to r-axis, add functions to fn keys(left/right bottom buttons).
+This tool has been tested with holoiso, it can map IMU(BMI260)'s angular velocity to r-axis, add functions to fn keys(left/right bottom buttons).
+
+Demo:https://youtu.be/gI9XL1J_pYE
 
 ## Installation
 - Block BMI160 related kernel modules by adding lines to /etc/modprobe.d/blacklist.conf:
