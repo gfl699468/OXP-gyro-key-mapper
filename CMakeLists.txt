@@ -5,7 +5,10 @@ add_subdirectory(imu)
 include_directories(imu)
 link_directories(imu)
 
-add_executable(oxp_gyro_key_mapper main.cpp)
-target_link_libraries(oxp_gyro_key_mapper imu_lib evdev pthread)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
+
+add_executable(oxp_gyro_key_mapper main.cpp uinput.cpp uinput.hpp)
+target_link_libraries(oxp_gyro_key_mapper imu_lib PkgConfig::deps evdev pthread)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

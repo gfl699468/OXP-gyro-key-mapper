@@ -1,3 +1,5 @@
+#ifndef IMU_HEADER
+#define IMU_HEADER
 #include "GamepadMotion.hpp"
 #include "bmi160/bmi160.h"
 extern "C" {
@@ -53,3 +55,4 @@ public:
     ~IMU();
 };
 
+#endif

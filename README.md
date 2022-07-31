@@ -25,6 +25,7 @@ make
 |:-------------------:|:------------:|:----------:|
 | left bottom button  | single click | steam menu |
 | left bottom button  | double click | gyro switch|
+| left&right bottom button  | single click | JS/mouse switch|
 | right bottom button<br />(not night mode btn) | single click | quick menu|
 | right bottom button<br />(not night mode btn) | double click | on-screen keyboard|
 
@@ -36,4 +37,5 @@ make
 ## Credit
 - [GamepadMotionHelpers](https://github.com/JibbSmart/GamepadMotionHelpers)
 - [BMI160_driver](https://github.com/BoschSensortec/BMI160_driver)
+- [xboxdrv](https://gitlab.com/xboxdrv/xboxdrv/)
 
