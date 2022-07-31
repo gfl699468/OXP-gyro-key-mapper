@@ -84,7 +84,7 @@ int main(int argc, char const *argv[])
     }
 
     auto gamepad_uidev = create_uinput_dev("Virtual XBox360", src_dev,
-                                           {{EV_KEY, {BTN_NORTH, BTN_SOUTH, BTN_WEST, BTN_EAST, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_THUMBL, BTN_THUMBR}},
+                                           {{EV_KEY, {BTN_NORTH, BTN_SOUTH, BTN_WEST, BTN_EAST, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_THUMBL, BTN_THUMBR, KEY_VOLUMEDOWN, KEY_VOLUMEUP}},
                                             {EV_SYN, {}},
                                             {EV_FF, {FF_RUMBLE, FF_PERIODIC, FF_SQUARE, FF_TRIANGLE, FF_SINE, FF_GAIN}}},
                                            {{ABS_X, libevdev_get_abs_info(src_dev, ABS_X)},
@@ -97,13 +97,13 @@ int main(int argc, char const *argv[])
                                             {ABS_HAT0Y, libevdev_get_abs_info(src_dev, ABS_HAT0Y)}});
 
     auto mouse_uidev = create_uinput_dev("Virtual Mouse", nullptr,
-                                         {{EV_KEY, {BTN_LEFT, BTN_MIDDLE, BTN_RIGHT, KEY_VOLUMEDOWN, KEY_VOLUMEUP}},
+                                         {{EV_KEY, {BTN_LEFT, BTN_MIDDLE, BTN_RIGHT}},
                                           {EV_SYN, {}},
                                           {EV_REL, {REL_X, REL_Y, REL_WHEEL, REL_WHEEL_HI_RES}}},
                                          {});
 
     // init IMU with filter, wait one sec to let IMU finish self-calib
-    IMU* imu = new IMU();
+    IMU *imu = new IMU();
     sleep(1);
     int rc = 1;
     float scale_factor = 50000;

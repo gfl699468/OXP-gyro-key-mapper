@@ -422,6 +422,11 @@ bool UInput::parse_fn(const struct input_event &ev, std::vector<Event> &event_qu
         }
       }
       break;
+      case KEY_VOLUMEDOWN: case KEY_VOLUMEUP:
+      {
+        src_event_queue.emplace_back(Event(EV_KEY, ev.code, ev.value));
+      }
+      break;
     default:
       break;
     }
