@@ -261,6 +261,8 @@ gboolean UInput::left_fn_single_click()
 {
   // std::cout << "left_fn_single_click" << std::endl;
   fn_event_queue.emplace_back(Event(EV_KEY, BTN_MODE, 1));
+  submit_msg(target_dev, fn_event_queue);
+  usleep(100 * 1e3);
   fn_event_queue.emplace_back(Event(EV_KEY, BTN_MODE, 0));
   submit_msg(target_dev, fn_event_queue);
   left_fn_single_click_thread_id = 0;
@@ -287,10 +289,14 @@ gboolean UInput::right_fn_single_click()
 {
   // std::cout << "right_fn_single_click" << std::endl;
   fn_event_queue.emplace_back(Event(EV_KEY, BTN_MODE, 1));
+  submit_msg(target_dev, fn_event_queue);
+  usleep(100 * 1e3);
   fn_event_queue.emplace_back(Event(EV_KEY, BTN_SOUTH, 1));
   submit_msg(target_dev, fn_event_queue);
   usleep(100 * 1e3);
   fn_event_queue.emplace_back(Event(EV_KEY, BTN_SOUTH, 0));
+  submit_msg(target_dev, fn_event_queue);
+  usleep(100 * 1e3);
   fn_event_queue.emplace_back(Event(EV_KEY, BTN_MODE, 0));
   submit_msg(target_dev, fn_event_queue);
   right_fn_single_click_thread_id = 0;
