@@ -12,7 +12,7 @@ libevdev *get_dev_by_name(std::string name)
     struct libevdev *dev;
     for (const auto &file : std::filesystem::directory_iterator(input_root_path))
     {
-        int tmp_fd = open(file.path().c_str(), O_RDONLY | O_NONBLOCK);
+        int tmp_fd = open(file.path().c_str(), O_RDWR | O_NONBLOCK);
         auto err = libevdev_new_from_fd(tmp_fd, &dev);
         if (err == 0)
         {
@@ -29,6 +29,7 @@ libevdev *get_dev_by_name(std::string name)
 
 libevdev_uinput *create_uinput_dev(std::string name,
                                    libevdev *ref_dev,
+                                   int fd,
                                    std::map<int, std::vector<int>> code_list,
                                    std::map<int, const input_absinfo *> absinfo_map)
 {
@@ -56,7 +57,7 @@ libevdev_uinput *create_uinput_dev(std::string name,
         for (const auto &abs_pair : absinfo_map)
             libevdev_enable_event_code(dev, EV_ABS, abs_pair.first, abs_pair.second);
     }
-    auto ret = libevdev_uinput_create_from_device(dev, LIBEVDEV_UINPUT_OPEN_MANAGED, &uidev);
+    auto ret = libevdev_uinput_create_from_device(dev, fd, &uidev);
     return uidev;
 }
 
@@ -83,7 +84,7 @@ int main(int argc, char const *argv[])
         return err;
     }
 
-    auto gamepad_uidev = create_uinput_dev("Virtual XBox360", src_dev,
+    auto gamepad_uidev = create_uinput_dev("Virtual XBox360", src_dev, LIBEVDEV_UINPUT_OPEN_MANAGED,
                                            {{EV_KEY, {BTN_NORTH, BTN_SOUTH, BTN_WEST, BTN_EAST, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_THUMBL, BTN_THUMBR, KEY_VOLUMEDOWN, KEY_VOLUMEUP}},
                                             {EV_SYN, {}},
                                             {EV_FF, {FF_RUMBLE, FF_PERIODIC, FF_SQUARE, FF_TRIANGLE, FF_SINE, FF_GAIN}}},
@@ -96,7 +97,7 @@ int main(int argc, char const *argv[])
                                             {ABS_HAT0X, libevdev_get_abs_info(src_dev, ABS_HAT0X)},
                                             {ABS_HAT0Y, libevdev_get_abs_info(src_dev, ABS_HAT0Y)}});
 
-    auto mouse_uidev = create_uinput_dev("Virtual Mouse", nullptr,
+    auto mouse_uidev = create_uinput_dev("Virtual Mouse", nullptr, LIBEVDEV_UINPUT_OPEN_MANAGED,
                                          {{EV_KEY, {BTN_LEFT, BTN_MIDDLE, BTN_RIGHT}},
                                           {EV_SYN, {}},
                                           {EV_REL, {REL_X, REL_Y, REL_WHEEL, REL_WHEEL_HI_RES}}},

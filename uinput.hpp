@@ -42,9 +42,11 @@ private:
     //output devices
     libevdev_uinput* target_dev;
     libevdev_uinput* mouse_dev;
+
     int src_fd, fn_fd, target_fd;
     GMainLoop* g_main;
     std::vector<Event> src_event_queue, fn_event_queue;
+    std::map<int, int> ff_effect_ids;
 
 public:
     UInput(libevdev* src_dev, 

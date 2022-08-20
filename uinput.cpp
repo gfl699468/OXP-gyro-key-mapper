@@ -35,7 +35,7 @@ UInput::UInput(libevdev *src_dev,
   // read event from src dev and send to target dev
   {
     // start g_io_channel
-    auto m_io_channel = g_io_channel_unix_new(libevdev_get_fd(src_dev));
+    auto m_io_channel = g_io_channel_unix_new(src_fd);
 
     // set encoding to binary
     GError *error = NULL;
@@ -55,7 +55,7 @@ UInput::UInput(libevdev *src_dev,
   // read event from fn dev and send to target dev
   {
     // start g_io_channel
-    auto m_io_channel = g_io_channel_unix_new(libevdev_get_fd(fn_dev));
+    auto m_io_channel = g_io_channel_unix_new(fn_fd);
 
     // set encoding to binary
     GError *error = NULL;
@@ -72,26 +72,26 @@ UInput::UInput(libevdev *src_dev,
                    &UInput::on_read_from_fn_wrap, this);
   }
 
-  // // init callback for target_dev
-  // // read ff event and send to src dev
-  // {
-  //     // start g_io_channel
-  //     auto m_io_channel = g_io_channel_unix_new(libevdev_uinput_get_fd(target_dev));
+  // init callback for target_dev
+  // read ff event and send to src dev
+  {
+      // start g_io_channel
+      auto m_io_channel = g_io_channel_unix_new(target_fd);
 
-  //     // set encoding to binary
-  //     GError* error = NULL;
-  //     if (g_io_channel_set_encoding(m_io_channel, NULL, &error) != G_IO_STATUS_NORMAL)
-  //     {
-  //     std::cout<< error->message << std::endl;
-  //     g_error_free(error);
-  //     }
+      // set encoding to binary
+      GError* error = NULL;
+      if (g_io_channel_set_encoding(m_io_channel, NULL, &error) != G_IO_STATUS_NORMAL)
+      {
+      std::cout<< error->message << std::endl;
+      g_error_free(error);
+      }
 
-  //     g_io_channel_set_buffered(m_io_channel, false);
+      g_io_channel_set_buffered(m_io_channel, false);
 
-  //     g_io_add_watch(m_io_channel,
-  //                     static_cast<GIOCondition>(G_IO_IN | G_IO_ERR | G_IO_HUP),
-  //                     &UInput::on_read_from_target_wrap, this);
-  // }
+      g_io_add_watch(m_io_channel,
+                      static_cast<GIOCondition>(G_IO_IN | G_IO_ERR | G_IO_HUP),
+                      &UInput::on_read_from_target_wrap, this);
+  }
 }
 
 UInput::~UInput(){};
@@ -120,6 +120,109 @@ gboolean UInput::on_read_from_fn(GIOChannel *source, GIOCondition condition)
 
   return TRUE;
 }
+
+gboolean UInput::on_read_from_target(GIOChannel* source, GIOCondition condition)
+{
+  struct input_event ev[128];
+  int rd = 0;
+  rd = read(target_fd, ev, sizeof(struct input_event) * 128);
+  
+  for (size_t i = 0; i < rd / sizeof(struct input_event); ++i)
+  {
+    switch(ev[i].type)
+    {
+      case EV_LED:
+        if (ev[i].code == LED_MISC)
+        {}
+        break;
+
+      case EV_FF:
+        switch(ev[i].code)
+        {
+          case FF_GAIN:
+            if (write(src_fd, &ev, sizeof(ev)) == -1)
+                perror("set gain:");
+            break;
+
+          default:
+            if (ev[i].value) {
+              if (write(src_fd, &ev, sizeof(ev)) == -1)
+                perror("Play effect");
+            } else {
+              if (write(src_fd, &ev, sizeof(ev)) == -1)
+                perror("Stop effect");
+            }
+        }
+        break;
+
+      case EV_UINPUT:
+        switch (ev[i].code)
+        {
+          case UI_FF_UPLOAD:
+            {              
+              struct uinput_ff_upload upload;
+              struct ff_effect new_effect;
+              memset(&upload, 0, sizeof(upload));
+
+              upload.request_id = ev[i].value;
+              // receive effect from client through target dev
+              ioctl(target_fd, UI_BEGIN_FF_UPLOAD, &upload);
+              new_effect = ff_effect(upload.effect);
+              // send effect to src dev
+              if (!ff_effect_ids.contains(upload.effect.id)) {
+                // new effect, 
+                // id set -1 to let kernel assign it
+                new_effect.id = -1;
+                int retval = ioctl(src_fd, EVIOCSFF, &new_effect);
+                if (retval < 0) {
+                  perror("upload effect failed");
+                } else {
+                  ff_effect_ids.emplace(upload.effect.id, new_effect.id);
+                }
+                upload.retval = retval;
+              }
+              // end receive
+              ioctl(target_fd, UI_END_FF_UPLOAD, &upload);
+            }
+            break;
+
+          case UI_FF_ERASE:
+            { 
+              struct uinput_ff_erase erase;
+              memset(&erase, 0, sizeof(erase));
+
+              erase.request_id = ev[i].value;
+              // receive effect_erase from client through target dev
+              ioctl(target_fd, UI_BEGIN_FF_ERASE, &erase);
+              // send effect to src dev
+              if (ff_effect_ids.contains(erase.effect_id)) {
+                int retval = ioctl(src_fd, EVIOCRMFF, ff_effect_ids[erase.effect_id]);
+                erase.retval = retval;
+                ff_effect_ids.erase(erase.effect_id);
+              } else {
+                std::cout << "effect id not exist! " << erase.effect_id << std::endl;
+                erase.retval = -1;
+              }
+              // end receive
+              ioctl(target_fd, UI_END_FF_ERASE, &erase);
+            }
+            break;
+
+          default:
+            std::cout << "unhandled event code read" << std::endl;
+            break;
+        }
+        break;
+
+      default:
+        std::cout << "unhandled event type read: " << libevdev_event_type_get_name(ev[i].type);
+        break;
+    }
+  }
+
+  return TRUE;
+}
+
 gboolean UInput::on_read_from_src(GIOChannel *source, GIOCondition condition)
 {
   // read data
@@ -149,10 +252,6 @@ gboolean UInput::on_read_from_src(GIOChannel *source, GIOCondition condition)
 
   return TRUE;
 }
-// gboolean on_read_from_target(GIOChannel* source, GIOCondition condition)
-// {
-
-// }
 
 bool UInput::parse_as_js(const struct input_event &ev, std::vector<Event> &event_queue)
 {
